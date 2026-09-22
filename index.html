@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Grade Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+
+    --paper: #E7E2D0;
+    --paper-alt: #DED6BC;
+    --paper-line: #C9BE9C;
+    --ink: #232E3B;
+    --ink-mute: #5C6472;
+    --rule-red: #A63D34;
+    --brass: #8C6A2E;
+    --grade-good: #2F6B4F;
+    --grade-mid: #97701F;
+    --grade-bad: #A63D34;
+    --shadow: rgba(35, 46, 59, 0.14);
+  }
+
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #1C2430;
+      --paper-alt: #232D3B;
+      --paper-line: #384155;
+      --ink: #E9E4D3;
+      --ink-mute: #A2AAB8;
+      --rule-red: #D9695E;
+      --brass: #D2AC63;
+      --grade-good: #6FBE97;
+      --grade-mid: #E0AE4D;
+      --grade-bad: #E37C71;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1C2430;
+    --paper-alt: #232D3B;
+    --paper-line: #384155;
+    --ink: #E9E4D3;
+    --ink-mute: #A2AAB8;
+    --rule-red: #D9695E;
+    --brass: #D2AC63;
+    --grade-good: #6FBE97;
+    --grade-mid: #E0AE4D;
+    --grade-bad: #E37C71;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: 'Lora', Georgia, 'Times New Roman', serif;
+    line-height: 1.5;
+    padding: 2.4rem 1.25rem 3rem;
+    min-height: 100%;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.1rem;
+    background-position: 0 8.2rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2.2rem;
+    padding-bottom: 1.4rem;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper);
+  }
+
+  h1 {
+    font-family: 'Lora', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.2vw, 2.6rem);
+    margin: 0 0 0.45rem;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--ink-mute);
+    font-size: 1.02rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+
+  @media (min-width: 800px) {
+    .grid { grid-template-columns: 1.05fr 1fr; align-items: start; }
+  }
+
+  .card {
+    background: var(--paper-alt);
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    padding: 1.6rem 1.6rem 1.8rem;
+    box-shadow: 0 1px 0 var(--paper-line), 0 10px 24px -18px var(--shadow);
+  }
+
+  .card h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 1.3rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .card h2 small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+
+  .field {
+    margin-bottom: 1.55rem;
+  }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.55rem;
+    font-size: 0.98rem;
+  }
+
+  .field-label span:first-child { color: var(--ink); }
+
+  .field-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--rule-red);
+    min-width: 3.4em;
+    text-align: right;
+  }
+
+  .field-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    margin-top: 0.3rem;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--brass) var(--fill, 50%), var(--paper-line) var(--fill, 50%));
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 3px solid var(--rule-red);
+    cursor: pointer;
+    margin-top: -0.5px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 3px solid var(--rule-red);
+    cursor: pointer;
+  }
+
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--rule-red);
+    outline-offset: 4px;
+  }
+
+  details {
+    margin-top: 1.7rem;
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 1.1rem;
+  }
+
+  summary {
+    cursor: pointer;
+    font-size: 0.92rem;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.01em;
+  }
+
+  summary:focus-visible { outline: 2px solid var(--rule-red); outline-offset: 3px; }
+
+  .num-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .num-field label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-mute);
+    margin-bottom: 0.35rem;
+  }
+
+  .num-field input[type="number"] {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--paper-line);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .num-field input[type="number"]:focus-visible {
+    outline: 2px solid var(--rule-red);
+    outline-offset: 1px;
+  }
+
+  /* Report card */
+  .stamp-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(3.2rem, 9vw, 4rem);
+    line-height: 0.85;
+    color: var(--grade-tier, var(--grade-good));
+    transition: color 0.25s ease;
+  }
+
+  .letter-meta {
+    padding-bottom: 0.4rem;
+  }
+
+  .letter-meta .pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .letter-meta .gpa {
+    font-size: 0.88rem;
+    color: var(--ink-mute);
+    margin-top: 0.15rem;
+  }
+
+  .breakdown {
+    margin: 1.5rem 0 1.7rem;
+  }
+
+  .breakdown-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--ink-mute);
+    margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  svg text {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem 1.3rem;
+    margin-top: 0.7rem;
+    font-size: 0.82rem;
+    color: var(--ink-mute);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .cgpa-block {
+    border-top: 1px solid var(--paper-line);
+    padding-top: 1.3rem;
+  }
+
+  .cgpa-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .cgpa-row .label {
+    font-size: 0.92rem;
+    color: var(--ink-mute);
+  }
+
+  .cgpa-row .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .delta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    text-align: right;
+  }
+
+  .delta.up { color: var(--grade-good); }
+  .delta.down { color: var(--rule-red); }
+  .delta.flat { color: var(--ink-mute); }
+
+  footer {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: var(--ink-mute);
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .stamp-row { flex-wrap: wrap; gap: 0.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>The Grade Ledger</h1>
+    <p>Move the sliders to try different outcomes for this course, and watch your class grade and overall GPA update as you go. Nothing here is saved or sent anywhere &mdash; it only runs in this page.</p>
+  </header>
+
+  <div class="grid">
+
+    <section class="card" aria-labelledby="inputs-heading">
+      <h2 id="inputs-heading">Enter your term <small>editable</small></h2>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Midterm score</span>
+          <span class="field-value" id="midtermVal">78</span>
+        </div>
+        <input type="range" id="midterm" min="0" max="100" step="1" value="78" aria-describedby="midtermWeight">
+        <div class="field-weight" id="midtermWeight">counts for 30% of the class grade</div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Assignments &amp; quizzes average</span>
+          <span class="field-value" id="assignVal">84</span>
+        </div>
+        <input type="range" id="assign" min="0" max="100" step="1" value="84" aria-describedby="assignWeight">
+        <div class="field-weight" id="assignWeight">counts for 30% of the class grade</div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Final exam score</span>
+          <span class="field-value" id="finalVal">70</span>
+        </div>
+        <input type="range" id="final" min="0" max="100" step="1" value="70" aria-describedby="finalWeight">
+        <div class="field-weight" id="finalWeight">counts for 40% of the class grade</div>
+      </div>
+
+      <details>
+        <summary>Fold out: your GPA so far (optional)</summary>
+        <div class="num-row">
+          <div class="num-field">
+            <label for="curGpa">Current CGPA (4.0 scale)</label>
+            <input type="number" id="curGpa" min="0" max="4" step="0.01" value="3.20">
+          </div>
+          <div class="num-field">
+            <label for="curCredits">Credits completed so far</label>
+            <input type="number" id="curCredits" min="0" step="0.5" value="60">
+          </div>
+          <div class="num-field">
+            <label for="courseCredits">Credit hours for this course</label>
+            <input type="number" id="courseCredits" min="0.5" step="0.5" value="4">
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="report-heading">
+      <h2 id="report-heading">Your report <small>live</small></h2>
+
+      <div class="stamp-row">
+        <div class="letter" id="letterGrade">C+</div>
+        <div class="letter-meta">
+          <div class="pct" id="pctScore">77.0%</div>
+          <div class="gpa" id="gpaPoints">2.3 grade points</div>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <div class="breakdown-label">
+          <span>Where the score comes from</span>
+          <span id="breakdownTotal">77.0 / 100</span>
+        </div>
+        <svg viewBox="0 0 400 34" width="100%" height="34" role="img" aria-label="Stacked bar showing each component's contribution to the class score">
+          <rect x="0" y="0" width="400" height="34" rx="3" fill="var(--paper)"></rect>
+          <rect id="barMidterm" x="0" y="0" height="34" fill="var(--brass)"></rect>
+          <rect id="barAssign" x="0" y="0" height="34" fill="var(--rule-red)"></rect>
+          <rect id="barFinal" x="0" y="0" height="34" fill="var(--ink)"></rect>
+        </svg>
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="background:var(--brass)"></span>Midterm</div>
+          <div class="legend-item"><span class="swatch" style="background:var(--rule-red)"></span>Assignments</div>
+          <div class="legend-item"><span class="swatch" style="background:var(--ink)"></span>Final</div>
+        </div>
+      </div>
+
+      <div class="cgpa-block">
+        <div class="cgpa-row">
+          <span class="label">Overall CGPA if this course lands here</span>
+          <span class="value" id="newCgpa">3.21</span>
+        </div>
+        <div class="delta" id="cgpaDelta">+0.01 from your current 3.20</div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>Standard 4.0 scale &middot; 90&ndash;100 A &middot; 80&ndash;89 B &middot; 70&ndash;79 C &middot; 60&ndash;69 D &middot; below 60 F, with +/&minus; steps between</footer>
+</div>
+
+<script>
+(function () {
+  var midterm = document.getElementById('midterm');
+  var assign = document.getElementById('assign');
+  var finalEl = document.getElementById('final');
+  var curGpa = document.getElementById('curGpa');
+  var curCredits = document.getElementById('curCredits');
+  var courseCredits = document.getElementById('courseCredits');
+
+  var WEIGHTS = { midterm: 0.30, assign: 0.30, final: 0.40 };
+
+  function gradeTier(pct) {
+    if (pct >= 93) return { letter: 'A',  gpa: 4.0, tier: 'good' };
+    if (pct >= 90) return { letter: 'A-', gpa: 3.7, tier: 'good' };
+    if (pct >= 87) return { letter: 'B+', gpa: 3.3, tier: 'good' };
+    if (pct >= 83) return { letter: 'B',  gpa: 3.0, tier: 'good' };
+    if (pct >= 80) return { letter: 'B-', gpa: 2.7, tier: 'mid' };
+    if (pct >= 77) return { letter: 'C+', gpa: 2.3, tier: 'mid' };
+    if (pct >= 73) return { letter: 'C',  gpa: 2.0, tier: 'mid' };
+    if (pct >= 70) return { letter: 'C-', gpa: 1.7, tier: 'mid' };
+    if (pct >= 67) return { letter: 'D+', gpa: 1.3, tier: 'bad' };
+    if (pct >= 60) return { letter: 'D',  gpa: 1.0, tier: 'bad' };
+    return { letter: 'F', gpa: 0.0, tier: 'bad' };
+  }
+
+  function setFill(input) {
+    var pct = (input.value - input.min) / (input.max - input.min) * 100;
+    input.style.setProperty('--fill', pct + '%');
+  }
+
+  function update() {
+    [midterm, assign, finalEl].forEach(setFill);
+
+    document.getElementById('midtermVal').textContent = midterm.value;
+    document.getElementById('assignVal').textContent = assign.value;
+    document.getElementById('finalVal').textContent = finalEl.value;
+
+    var mContrib = midterm.value * WEIGHTS.midterm;
+    var aContrib = assign.value * WEIGHTS.assign;
+    var fContrib = finalEl.value * WEIGHTS.final;
+    var total = mContrib + aContrib + fContrib;
+
+    var g = gradeTier(total);
+
+    document.getElementById('letterGrade').textContent = g.letter;
+    document.getElementById('pctScore').textContent = total.toFixed(1) + '%';
+    document.getElementById('gpaPoints').textContent = g.gpa.toFixed(1) + ' grade points';
+    document.getElementById('breakdownTotal').textContent = total.toFixed(1) + ' / 100';
+
+    var tierColor = g.tier === 'good' ? 'var(--grade-good)' : (g.tier === 'mid' ? 'var(--grade-mid)' : 'var(--grade-bad)');
+    document.getElementById('letterGrade').style.setProperty('--grade-tier', tierColor);
+    document.getElementById('letterGrade').style.color = tierColor;
+
+    var barW = 400;
+    var mW = (mContrib / 100) * barW;
+    var aW = (aContrib / 100) * barW;
+    var fW = (fContrib / 100) * barW;
+
+    var barM = document.getElementById('barMidterm');
+    var barA = document.getElementById('barAssign');
+    var barF = document.getElementById('barFinal');
+
+    barM.setAttribute('x', 0);
+    barM.setAttribute('width', Math.max(mW, 0));
+    barA.setAttribute('x', mW);
+    barA.setAttribute('width', Math.max(aW, 0));
+    barF.setAttribute('x', mW + aW);
+    barF.setAttribute('width', Math.max(fW, 0));
+
+    var cg = parseFloat(curGpa.value) || 0;
+    var cc = parseFloat(curCredits.value) || 0;
+    var thisCr = parseFloat(courseCredits.value) || 0;
+
+    var newCgpaVal;
+    if (cc + thisCr > 0) {
+      newCgpaVal = (cg * cc + g.gpa * thisCr) / (cc + thisCr);
+    } else {
+      newCgpaVal = g.gpa;
+    }
+
+    document.getElementById('newCgpa').textContent = newCgpaVal.toFixed(2);
+
+    var deltaEl = document.getElementById('cgpaDelta');
+    var diff = newCgpaVal - cg;
+    var sign = diff > 0.004 ? '+' : (diff < -0.004 ? '' : '');
+    deltaEl.textContent = (diff === 0 ? '' : sign) + diff.toFixed(2) + ' from your current ' + cg.toFixed(2);
+    deltaEl.className = 'delta ' + (diff > 0.004 ? 'up' : (diff < -0.004 ? 'down' : 'flat'));
+  }
+
+  [midterm, assign, finalEl, curGpa, curCredits, courseCredits].forEach(function (el) {
+    el.addEventListener('input', update);
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
